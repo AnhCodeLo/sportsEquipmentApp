@@ -3,20 +3,50 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
-import { CheckBox } from "react-native-elements";
+import { Checkbox } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "react-native-vector-icons";
+import styles from "../styles/SignUpStyles";
+import { registerUser } from "../api/authApi";
+import BASE_URL from "../config";
 
 export default function SignUpScreen({ navigation }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
+
+  // Xử lý đăng ký
+  const handleSignUp = async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+    if (!agree) {
+      Alert.alert("Error", "You must agree to the Terms & Conditions.");
+      return;
+    }
+
+    try {
+      await registerUser(name, email, password);
+      Alert.alert("Success", "Registration successful!");
+      navigation.navigate("Login"); // Chuyển hướng sang Login
+    } catch (error) {
+      Alert.alert("Error", error);
+    }
+  };
 
   return (
     <LinearGradient colors={["#B6D6F4", "#ffffff"]} style={styles.container}>
-      {}
       <Image
         source={{
           uri: "https://i.pinimg.com/736x/04/82/6d/04826dce193bf7644357aed28652d7a3.jpg",
@@ -37,7 +67,8 @@ export default function SignUpScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Full Name"
-          placeholderTextColor="#888"
+          value={name}
+          onChangeText={setName}
         />
       </View>
 
@@ -52,7 +83,9 @@ export default function SignUpScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
         />
       </View>
 
@@ -67,8 +100,9 @@ export default function SignUpScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#888"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
@@ -83,25 +117,31 @@ export default function SignUpScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
-          placeholderTextColor="#888"
           secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
         />
       </View>
 
       {/* Checkbox "Agree Terms" */}
       <View style={styles.agreeContainer}>
-        <CheckBox
-          title="I agree to the Terms & Conditions"
-          checked={agree}
+        <TouchableOpacity
           onPress={() => setAgree(!agree)}
-          containerStyle={styles.checkboxContainer}
-          checkedColor="#8e44ad"
-          textStyle={styles.checkboxText}
-        />
+          style={[styles.checkboxWrapper, agree && styles.checkboxChecked]}
+        >
+          <Checkbox
+            status={agree ? "checked" : "unchecked"}
+            onPress={() => setAgree(!agree)}
+            color="#8e44ad"
+          />
+        </TouchableOpacity>
+        <Text style={styles.checkboxText}>
+          I agree to the Terms & Conditions
+        </Text>
       </View>
 
       {/* Sign Up Button */}
-      <TouchableOpacity style={styles.signUpButton}>
+      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
         <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
@@ -114,64 +154,3 @@ export default function SignUpScreen({ navigation }) {
     </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logo: {
-    width: "95%",
-    height: 180,
-    resizeMode: "cover",
-    marginBottom: 20,
-    borderRadius: 20,
-    overflow: "hidden",
-    marginTop: -80,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#FF6767",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 30,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    width: "90%",
-  },
-  icon: { marginRight: 10 },
-  input: { flex: 1, height: 50, color: "#333" },
-  agreeContainer: {
-    flexDirection: "row",
-    width: "90%",
-    marginBottom: 20,
-  },
-  checkboxContainer: {
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    padding: 0,
-  },
-  checkboxText: {
-    color: "#4b0082",
-    fontSize: 14,
-  },
-  signUpButton: {
-    backgroundColor: "#8e44ad",
-    paddingVertical: 15,
-    borderRadius: 30,
-    alignItems: "center",
-    width: "90%",
-    marginBottom: 15,
-  },
-  signUpText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  loginText: { color: "#4b0082", fontSize: 14, textAlign: "center" },
-  loginLink: { color: "#8e44ad", fontWeight: "bold" },
-});
